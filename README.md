@@ -1,6 +1,6 @@
 # Dts-seq
 
-**Computatopnal workflow for Dts-seq analysis**
+**Computational workflow for Dts-seq analysis**
 
 You will find here the computational protocol for the analysis of Dts-seq data.
 
