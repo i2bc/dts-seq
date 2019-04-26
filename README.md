@@ -1,20 +1,18 @@
 # Dts-seq
 
-**Computanional workflow for Dts-seq analysis**
+**Computatopnal workflow for Dts-seq analysis**
 
-You will find here the computational protocole for the analysis of the Dts-seq data related to the publication [here](https:??).
+You will find here the computational protocol for the analysis of Dts-seq data.
 
 **Contact**
 
-- Ji Wang (<??>)
-- Forence Lorieux (<??>)
 - Claire Toffano-Nioche (<claire.toffano-nioche@u-psud.fr>)
-- Daniel Gautheret (<??>)
-- Jean Lehmann (<??>)
+- Daniel Gautheret (<daniel.gautheret@u-psud.fr>)
+- Jean Lehmann (<jean.lehmann@u-psud.fr>)
 
 ## RNAseq: from fastq to reads coverage
 
-### Repository architechture 
+### Repository architecture 
 
 * Protocole: creating a repository for the analysis: 
 * Code:
@@ -23,13 +21,13 @@ mkdir Dts-seq ;
 cd Dts-seq ; 
 mkdir 1_rawData 2_mapping 3_counting 4_?? 5_?? 6_tRNA_modification
 ```
-* Result: the architechture of `Dts-seq` repository
+* Result: the architecture of `Dts-seq` repository
 
 ### Data
 
 #### Genome & annotations 
 
-* Protocole: downloaded from the ncbi, acces: GCF_000005845.2_ASM584v2
+* Protocol: Genome downloaded from ncbi, accession: GCF_000005845.2_ASM584v2
 * Code : 
 ```bash
 cd 1_rawData
@@ -43,7 +41,7 @@ gunzip GCF_000005845.2_ASM584v2_genomic.*.gz
 
 #### RNAseq Data 
 
-- Protocole: R2 files were downloaded from ENA (acces: ??) into the local `Dts-seq/1_rawData` repository.
+- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_rawData` repository.
 - Code to list all samples files:
 ```bash
 rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2_fastq.gz ; done ; done
@@ -54,7 +52,7 @@ rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2_fastq
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
 |QC-passed   | 11796813, 13114509, 11455875 | 11680073, 13517533, 10775965 | 15388902, 12562074, 10691188 |
 
-### Cleanning step
+### Cleaning 
 
 - Protocol: each raw fastq file was cleaned (cutadapt software) with a specific polyA adapter following the wet protocole and reads shorter than 10 bp after polyA trimming were discarded. Quality control were done (FastQC software). 
 - Code:
@@ -77,7 +75,7 @@ cd ..
 - Protocol: Reads mapping was done with bowtie2 with the local mapping option to maximise the alignment length.
 - Code:
 ```bash
-# create genomic index file for bowtie2
+# create genome index file for bowtie2
 cd 2_mapping
 docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build ../1_rawData/GCF_000005845.2_ASM584v2_genomic.fna index_bt2x/NC_00913
 # bowtie2 run
@@ -92,7 +90,7 @@ cd ..
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
 |mapped      |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | 
 
-### Alignments selection step
+### Alignment selection
 
 - Protocol: selection of mapped reads on the genomic sequence (with samtools view) and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
 - Code:
@@ -109,11 +107,11 @@ done ; done ;
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       | 
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-|remainning  |  6494515,  5150196,  6941871 |  7229758,  6803833,  7551225 |  9045057,  7457325,  6771946 | 
+|remaining   |  6494515,  5150196,  6941871 |  7229758,  6803833,  7551225 |  9045057,  7457325,  6771946 | 
 
-### Reads coverage computation step
+### Read coverage computation
 
-- Protocole: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 paire, exchange of reverse and forward strands (join).
+- Protocol: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 paire, exchange of reverse and forward strands (join).
 - Code:
 ```bash
 for i in 2_mapping/*_CCATGG.bam ; do
@@ -132,7 +130,7 @@ done ;
   - 45 *_depth_*.txt (raw count)
   - 15 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
 
-### count in 3prime of tRNA ??
+### read count in tRNA 3' regions
 
 ```bash
 awk 'BEGIN{FS="\t"}{if($3=="tRNA"){if($7~"+"){posEnd=$5}else{posEnd=$4};print "NC_000913.3:"posEnd"-"posEnd}}' NC_000913.gff > NC_000913_tRNA_3prime.list
@@ -144,11 +142,11 @@ for rep in "A" "B" "C" ; do for sample in "3-D" "4-NT" "5-nD" ; do
 done ; done
 ```
 
-## Modified bases: from modomics DB to gff
+## Modified bases: conversion from Modomics DB to gff
 
 ### Data
 
-- Protocole: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Saccharomyces cerevisiae* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
+- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Saccharomyces cerevisiae* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
 - Code:
 ```bash
 sed 'n;s/[AGCU_]/ /g' bmModomics_nov17_info.fasta > bmModomics_nov17_Daniel.fasta
@@ -161,7 +159,7 @@ sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ |
 
 ### Genomic coordinates of modified bases
 
-- Protocole: alignement of modomics sequences to genomic sequence (blastn software)
+- Protocol: alignment of modomics sequences to genomic sequence (blastn)
 - Code:
 ```bash
 blast
@@ -169,9 +167,9 @@ blast analysis
 ```
 - Result file: `tRNA_feature.txt` [supplemental file](http://??)
 
-## Terminason signal: from read coverage to ts-jump
+## Termination signal: from read coverage to ts-jump
 
-## Tools version used
+## Software version used
 
 - fastqc: from docker-registry.genouest.org/ifb/fastqc, version 0.11.5
 - cutadapt: from docker-registry.genouest.org/bioconda/cutadapt, version 1.11
