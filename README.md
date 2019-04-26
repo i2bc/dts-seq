@@ -82,6 +82,7 @@ cd 2_mapping
 docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build ../1_rawData/GCF_000005845.2_ASM584v2_genomic.fna index_bt2x/NC_00913
 # bowtie2 run
 rm nohup.out ; nohup bash -c 'for i in ../1_rawData/*_noPolyA.fastq ; do sample=`basename $i _noPolyA.fastq` ; echo "------------" $sample "-------------" ; docker run -v Dts-seq/2_mapping/:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x index_bt2x/NC_00913 --phred33 --local $i > ${sample}.sam ; done '
+cd ..
 ```
 - Result files (into `2_mapping` repository):
   - 6 index files for bowtie2 (`*.btz2` into `index_bt2x` repository)
@@ -96,7 +97,7 @@ rm nohup.out ; nohup bash -c 'for i in ../1_rawData/*_noPolyA.fastq ; do sample=
 - Protocol: selection of mapped reads on the genomic sequence (with samtools view) and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
 - Code:
 ```bash
-rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
+for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
    samtools view -h 2_mapping/${rep}${s}.sam NC_000913.3 | awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hb -o 2_mapping/${rep}${s}_CCATGG_unsort.bam - ; 
    samtools sort 2_mapping/${rep}${s}_CCATGG_unsort.bam > 2_mapping/${rep}${s}_CCATGG.bam 
    samtools index 2_mapping/${rep}${s}_CCATGG.bam ; 
@@ -147,20 +148,32 @@ done ; done
 
 ### Data
 
-- tRNA with modified bases
-get from modomics, acces: ?? (copy/paste in text format)
+- Protocole: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Saccharomyces cerevisiae* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
+- Code:
+```bash
+sed 'n;s/[AGCU_]/ /g' bmModomics_nov17_info.fasta > bmModomics_nov17_Daniel.fasta
+sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ | /_/g;' bmModomics_nov17.txt > bmModomics_nov17_seqU.fasta
+```
+- Result files: 
+  - 43 tRNA sequences with ?? knowed modified bases, `bmModomics_nov17.txt`
+  - without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`)
+  - without modified bases (`bmModomics_nov17_seqU.fasta`)
 
-### location in genomic the sequence
+### Genomic coordinates of modified bases
 
+- Protocole: alignement of modomics sequences to genomic sequence (blastn software)
+- Code:
+```bash
 blast
 blast analysis
-automatisation
+```
+- Result file: `tRNA_feature.txt` [supplemental file](http://??)
 
 ## Terminason signal: from read coverage to ts-jump
 
-## Tools version
+## Tools version used
 
-- fastqc: from docker-registry.genouest.org/ifb/fastqc, version ??
+- fastqc: from docker-registry.genouest.org/ifb/fastqc, version 0.11.5
 - cutadapt: from docker-registry.genouest.org/bioconda/cutadapt, version 1.11
 - bowtie2: from docker-registry.genouest.org/bioconda/bowtie2, bowtie2-align-s version 2.2.8 
 - samtools: version 1.4
