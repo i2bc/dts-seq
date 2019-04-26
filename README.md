@@ -10,11 +10,11 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 - Daniel Gautheret (<daniel.gautheret@u-psud.fr>)
 - Jean Lehmann (<jean.lehmann@u-psud.fr>)
 
-## RNAseq: from fastq to reads coverage
+## RNAseq: from fastq to read coverage
 
 ### Repository architecture 
 
-* Protocole: creating a repository for the analysis: 
+* Protocol: creating a repository for the analysis: 
 * Code:
 ```bash
 mkdir Dts-seq ; 
@@ -54,7 +54,7 @@ rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2_fastq
 
 ### Cleaning 
 
-- Protocol: each raw fastq file was cleaned (cutadapt software) with a specific polyA adapter following the wet protocole and reads shorter than 10 bp after polyA trimming were discarded. Quality control were done (FastQC software). 
+- Protocol: each raw fastq file was cleaned (cutadapt) with a specific polyA adapter following the wet protocol and reads shorter than 10 bp after polyA trimming were discarded. Quality control was performed (FastQC software). 
 - Code:
 ```bash
 nohup bash -c 'for i in *_R2.fastq.gz ; do SampleName=`basename -s .fastq.gz ${i}` ; docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=${SampleName}_noPolyA.fastq ${i} ; mv nohup.out cutadapt_${SampleName}.log ; done' &
