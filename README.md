@@ -19,7 +19,7 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 ```bash
 mkdir Dts-seq ; 
 cd Dts-seq ; 
-mkdir 1_rawData 2_mapping 3_counting 4_?? 5_?? 6_tRNA_modification
+mkdir 1_rawData 2_processedData 2_processedData/FastQC 3_mapping 4_counting 5_?? 6_tRNA_modification
 ```
 * Result: the architecture of `Dts-seq` repository
 
@@ -30,10 +30,11 @@ mkdir 1_rawData 2_mapping 3_counting 4_?? 5_?? 6_tRNA_modification
 * Protocol: Genome downloaded from ncbi, accession: GCF_000005845.2_ASM584v2
 * Code : 
 ```bash
-cd 1_rawData
+cd 1_raw_data
 wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz
 wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.gff.gz
 gunzip GCF_000005845.2_ASM584v2_genomic.*.gz
+cd ..
 ```
 * Result files: 
   * GCF_000005845.2_ASM584v2_genomic.fna
@@ -41,12 +42,14 @@ gunzip GCF_000005845.2_ASM584v2_genomic.*.gz
 
 #### RNAseq Data 
 
-- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_rawData` repository.
+- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_raw_data` repository.
 - Code to list all samples files:
 ```bash
-rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2_fastq.gz ; done ; done
+cd 1_raw_data
+for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2.fastq.gz ; done ; done
+cd ..
 ```
-- Result files: 15 `*_R2_fastq.gz`
+- Result files: 9 `*_R2_fastq.gz`
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
@@ -57,14 +60,17 @@ rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2_fastq
 - Protocol: each raw fastq file was cleaned (cutadapt) with a specific polyA adapter following the wet protocol and reads shorter than 10 bp after polyA trimming were discarded. Quality control was performed (FastQC software). 
 - Code:
 ```bash
-nohup bash -c 'for i in *_R2.fastq.gz ; do SampleName=`basename -s .fastq.gz ${i}` ; docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=${SampleName}_noPolyA.fastq ${i} ; mv nohup.out cutadapt_${SampleName}.log ; done' &
-nohup bash -c 'for i in *_noPolyA.fastq ; do SampleName=`basename -s _noPolyA.fastq ${i}` ; docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o FastQC ${i} 2> fastqc_${SampleName}.log ; done' &
+DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root"
+rm 2_processedData/cutadapt.log ; for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
+   SampleName=`basename -s .fastq.gz ${i}` ; docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=2_processedData/${SampleName}_noPolyA.fastq ${i} >> 2_processedData/cutadapt.log 
+   docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o 2_processedData/FastQC 2_processedData/${SampleName}_noPolyA.fastq 2> 2_processedData/fastqc.log ;
+done'
 cd ..
 ```
 - Result files:
-  - 15 output fastq files (`*_noPolyA.fastq`) 
-  - 15 log files (`cutadapt_*.log`)
-  - 15 repositories containing the quality control results (`*.html`) 
+  - 9 output fastq files (`*_noPolyA.fastq`) 
+  - 9 log files (`cutadapt_*.log`)
+  - 9 repositories containing the quality control results (`*.html`) 
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       | 
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
@@ -77,14 +83,14 @@ cd ..
 ```bash
 # create genome index file for bowtie2
 cd 2_mapping
-docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build ../1_rawData/GCF_000005845.2_ASM584v2_genomic.fna index_bt2x/NC_00913
+docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build ../1_raw_data/GCF_000005845.2_ASM584v2_genomic.fna index_bt2x/NC_00913
 # bowtie2 run
-rm nohup.out ; nohup bash -c 'for i in ../1_rawData/*_noPolyA.fastq ; do sample=`basename $i _noPolyA.fastq` ; echo "------------" $sample "-------------" ; docker run -v Dts-seq/2_mapping/:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x index_bt2x/NC_00913 --phred33 --local $i > ${sample}.sam ; done '
+rm nohup.out ; nohup bash -c 'for i in ../1_raw_data/*_noPolyA.fastq ; do sample=`basename $i _noPolyA.fastq` ; echo "------------" $sample "-------------" ; docker run -v Dts-seq/2_mapping/:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x index_bt2x/NC_00913 --phred33 --local $i > ${sample}.sam ; done '
 cd ..
 ```
 - Result files (into `2_mapping` repository):
   - 6 index files for bowtie2 (`*.btz2` into `index_bt2x` repository)
-  - 15 *.sam
+  - 9 *.sam
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
@@ -102,8 +108,8 @@ for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
 done ; done ;
 ```
 - Result files (into `2_mapping` repository): 
-  - 15 *_CCATGG.bam 
-  - 15 *_CCATGG.bam.bai 
+  - 9 *_CCATGG.bam 
+  - 9 *_CCATGG.bam.bai 
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       | 
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
@@ -127,8 +133,8 @@ for i in 2_mapping/*_CCATGG.bam ; do
 done ;
 ```
 - Result files:
-  - 45 *_depth_*.txt (raw count)
-  - 15 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
+  - 27 *_depth_*.txt (raw count)
+  - 9 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
 
 ### read count in tRNA 3' regions
 
@@ -146,15 +152,15 @@ done ; done
 
 ### Data
 
-- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Saccharomyces cerevisiae* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
+- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Escherichia coli* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_noBM.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
 - Code:
 ```bash
-sed 'n;s/[AGCU_]/ /g' bmModomics_nov17_info.fasta > bmModomics_nov17_Daniel.fasta
+sed 'n;s/[AGCU_]/ /g' bmModomics_nov17_info.fasta > bmModomics_nov17_noBM.fasta
 sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ | /_/g;' bmModomics_nov17.txt > bmModomics_nov17_seqU.fasta
 ```
 - Result files: 
   - 43 tRNA sequences with ?? knowed modified bases, `bmModomics_nov17.txt`
-  - without any bases but modified ones (`bmModomics_nov17_Daniel.fasta`)
+  - without any bases but modified ones (`bmModomics_nov17_noBM.fasta`)
   - without modified bases (`bmModomics_nov17_seqU.fasta`)
 
 ### Genomic coordinates of modified bases
