@@ -19,7 +19,8 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 ```bash
 mkdir Dts-seq ; 
 cd Dts-seq ; 
-mkdir 1_rawData 2_processedData 2_processedData/FastQC 3_mapping 4_counting 5_?? 6_tRNA_modification
+mkdir 1_rawData 2_processedData 3_mapping 4_selection 5_coverage 6_tRNA_modification
+mkdir 2_processedData/FastQC 3_mapping/index_bt2x
 ```
 * Result: the architecture of `Dts-seq` repository
 
@@ -60,16 +61,18 @@ cd ..
 - Protocol: each raw fastq file was cleaned (cutadapt) with a specific polyA adapter following the wet protocol and reads shorter than 10 bp after polyA trimming were discarded. Quality control was performed (FastQC software). 
 - Code:
 ```bash
-DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root"
-rm 2_processedData/cutadapt.log ; for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
-   SampleName=`basename -s .fastq.gz ${i}` ; docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=2_processedData/${SampleName}_noPolyA.fastq ${i} >> 2_processedData/cutadapt.log 
-   docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o 2_processedData/FastQC 2_processedData/${SampleName}_noPolyA.fastq 2> 2_processedData/fastqc.log ;
+DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root" ;
+rm 2_processedData/cutadapt.log ; rm 2_processedData/fastqc.log ;
+for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
+   SampleName=`basename -s .fastq.gz ${i}` ; 
+   docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=2_processedData/${SampleName}_noPolyA.fastq ${i} >> 2_processedData/cutadapt.log 2>&1 ;
+   docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o 2_processedData/FastQC 2_processedData/${SampleName}_noPolyA.fastq >> 2_processedData/fastqc.log 2>&1 ;
 done'
 cd ..
 ```
-- Result files:
+- Result files (into `2_processedData` repository):
   - 9 output fastq files (`*_noPolyA.fastq`) 
-  - 9 log files (`cutadapt_*.log`)
+  - 2 log files (`cutadapt.log`, `fastqc.log`)
   - 9 repositories containing the quality control results (`*.html`) 
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       | 
@@ -81,33 +84,41 @@ cd ..
 - Protocol: Reads mapping was done with bowtie2 with the local mapping option to maximise the alignment length.
 - Code:
 ```bash
+DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root"
 # create genome index file for bowtie2
-cd 2_mapping
-docker run -v /root/mydisk/data/JW:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build ../1_raw_data/GCF_000005845.2_ASM584v2_genomic.fna index_bt2x/NC_00913
+rm 3_mapping/bowtie2-build.log ; rm 3_mapping/bowtie2-align.log ;
+docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna 3_mapping/index_bt2x/NC_00913 >> 3_mapping/bowtie2-build.log 2>&1
 # bowtie2 run
-rm nohup.out ; nohup bash -c 'for i in ../1_raw_data/*_noPolyA.fastq ; do sample=`basename $i _noPolyA.fastq` ; echo "------------" $sample "-------------" ; docker run -v Dts-seq/2_mapping/:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x index_bt2x/NC_00913 --phred33 --local $i > ${sample}.sam ; done '
-cd ..
+for i in 2_processedData/*_noPolyA.fastq ; do 
+   sample=`basename $i _noPolyA.fastq` ; 
+   docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x 3_mapping/index_bt2x/NC_00913 --phred33 --local $i > 3_mapping/${sample}.sam 2>> 3_mapping/bowtie2-align.log ; 
+done '
 ```
 - Result files (into `2_mapping` repository):
   - 6 index files for bowtie2 (`*.btz2` into `index_bt2x` repository)
   - 9 *.sam
+  - log files: `bowtie2-align.log`, `bowtie2-build.log`
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-|mapped      |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | 
+#|mapped chr+spike     |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | 
+|mapped chr  |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
+
+
 
 ### Alignment selection
 
 - Protocol: selection of mapped reads on the genomic sequence (with samtools view) and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
 - Code:
 ```bash
+rm selection.log
 for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
-   samtools view -h 2_mapping/${rep}${s}.sam NC_000913.3 | awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hb -o 2_mapping/${rep}${s}_CCATGG_unsort.bam - ; 
-   samtools sort 2_mapping/${rep}${s}_CCATGG_unsort.bam > 2_mapping/${rep}${s}_CCATGG.bam 
-   samtools index 2_mapping/${rep}${s}_CCATGG.bam ; 
+   samtools view -h 3_mapping/${rep}${s}.sam NC_000913.3 | awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hb -o 4_selection/${rep}${s}_CCATGG_unsort.bam - 2>> 4_selection/selection.log ; 
+   samtools sort 4_selection/${rep}${s}_CCATGG_unsort.bam > 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log
+   samtools index 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ; 
 done ; done ;
 ```
-- Result files (into `2_mapping` repository): 
+- Result files (into `3_mapping` repository): 
   - 9 *_CCATGG.bam 
   - 9 *_CCATGG.bam.bai 
 
@@ -129,12 +140,12 @@ for i in 2_mapping/*_CCATGG.bam ; do
    # strands association 
    join -t $'\t' -12 -22 -o 1.3,2.3 ${sample}_depth_rev.txt ${sample}_depth_for.txt > ${sample}_depth_fr.txt ; 
    # coverage: log computation => *_covlog.wig
-   awk 'BEGIN{FS="\t";print "variableStep chrom=NC_000913.3"}{if($1==0){logF=0}else{logF=log($1)/log(2)}; if($2==0){logR=0}else{logR=log($2)/log(2)};printf "%d %2.2f\n%d -%2.2f\n",NR,logF,NR,logR}' ${sample}_depth_fr.txt > ${sample}_covlog.wig ; 
+#   awk 'BEGIN{FS="\t";print "variableStep chrom=NC_000913.3"}{if($1==0){logF=0}else{logF=log($1)/log(2)}; if($2==0){logR=0}else{logR=log($2)/log(2)};printf "%d %2.2f\n%d -%2.2f\n",NR,logF,NR,logR}' ${sample}_depth_fr.txt > ${sample}_covlog.wig ; 
 done ;
 ```
 - Result files:
   - 27 *_depth_*.txt (raw count)
-  - 9 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
+#  - 9 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
 
 ### read count in tRNA 3' regions
 
