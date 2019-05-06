@@ -43,12 +43,10 @@ cd ..
 
 #### RNAseq Data 
 
-- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_raw_data` repository.
+- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_rawData` repository.
 - Code to list all samples files:
 ```bash
-cd 1_raw_data
-for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls ${rep}${samples}_R2.fastq.gz ; done ; done
-cd ..
+for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${samples}_R2.fastq.gz ; done ; done
 ```
 - Result files: 9 `*_R2_fastq.gz`
 
@@ -139,13 +137,12 @@ for i in 2_mapping/*_CCATGG.bam ; do
    samtools view -h -b -F 0x14 ${sample}.bam NC_000913.3 | samtools depth -m 10000000 -a - > ${sample}_depth_for.txt ; 
    # strands association 
    join -t $'\t' -12 -22 -o 1.3,2.3 ${sample}_depth_rev.txt ${sample}_depth_for.txt > ${sample}_depth_fr.txt ; 
-   # coverage: log computation => *_covlog.wig
-#   awk 'BEGIN{FS="\t";print "variableStep chrom=NC_000913.3"}{if($1==0){logF=0}else{logF=log($1)/log(2)}; if($2==0){logR=0}else{logR=log($2)/log(2)};printf "%d %2.2f\n%d -%2.2f\n",NR,logF,NR,logR}' ${sample}_depth_fr.txt > ${sample}_covlog.wig ; 
 done ;
 ```
 - Result files:
-  - 27 *_depth_*.txt (raw count)
-#  - 9 *_covlog.wig for (igv visualisation of log2 coverage) ?? not use ??
+  - 9 *_depth_for.txt (coverage on forward strand)
+  - 9 *_depth_rev.txt (coverage on reverse strand)
+  - 9 *_depth_fr.txt (coverage on both strands)
 
 ### read count in tRNA 3' regions
 
@@ -159,7 +156,7 @@ for rep in "A" "B" "C" ; do for sample in "3-D" "4-NT" "5-nD" ; do
 done ; done
 ```
 
-## Modified bases: conversion from Modomics DB to gff
+## tRNA modified bases: conversion from Modomics DB to gff
 
 ### Data
 
