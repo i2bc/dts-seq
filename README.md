@@ -132,9 +132,9 @@ done ; done ;
 for i in 2_mapping/*_CCATGG.bam ; do
    sample=`basename $i .bam` ;
    # coverage for reverse strand
-   samtools view -h -b -f 16 ${sample}.bam NC_000913.3 | samtools depth -m 10000000 -a - > ${sample}_depth_rev.txt ; 
+   samtools view -h -b -f 16 ${sample}.bam NC_000913.3 | samtools depth -d 10000000 -a - > ${sample}_depth_rev.txt ; 
    # coverage for forward strand
-   samtools view -h -b -F 0x14 ${sample}.bam NC_000913.3 | samtools depth -m 10000000 -a - > ${sample}_depth_for.txt ; 
+   samtools view -h -b -F 0x14 ${sample}.bam NC_000913.3 | samtools depth -d 10000000 -a - > ${sample}_depth_for.txt ; 
    # strands association 
    join -t $'\t' -12 -22 -o 1.3,2.3 ${sample}_depth_rev.txt ${sample}_depth_for.txt > ${sample}_depth_fr.txt ; 
 done ;
