@@ -1,0 +1,73 @@
+alaT (alaU alaV)
+alaX (alaW)
+--
+argQ (argV argY argZ)
+argU 
+argW 
+argX 
+--
+asnT (asnU asnV asnW)
+--
+aspT (aspU aspV)
+--
+cysT
+--
+glnU (glnW)
+glnV (glnX)
+--
+gltT (gltU gltV gltW)
+--
+glyT 
+glyU 
+glyV (glyW glyX glyY)
+--
+hisR 
+--
+ileT (ileU ileV)
+ileX 
+ileY 
+--
+leuP 
+leuQ (leuT leuV)
+leuU 
+leuW 
+leuX 
+leuZ 
+--
+lysQ (lysT lysV lysW lysY lysZ)
+--
+metT (metU)
+metV (metW metZ)
+metY 
+--
+pheU (pheV)
+--
+proK 
+proL 
+proM 
+--
+selC 
+--
+serT 
+serU 
+serV 
+serW (serX)
+--
+thrT 
+thrU 
+thrV 
+thrW 
+--
+trpT 
+--
+tyrT (tyrV)
+tyrU 
+--
+valT (valU valX valY valZ)
+valV 
+valW 
+--
+pauD
+pawZ
+ptwF
+--
