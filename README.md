@@ -88,7 +88,7 @@ rm 3_mapping/bowtie2-build.log ; rm 3_mapping/bowtie2-align.log ;
 docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna 3_mapping/index_bt2x/NC_00913 >> 3_mapping/bowtie2-build.log 2>&1
 # bowtie2 run
 for i in 2_processedData/*_noPolyA.fastq ; do 
-   sample=`basename $i _noPolyA.fastq` ; 
+   sample=`basename $i _R2_noPolyA.fastq` ; 
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x 3_mapping/index_bt2x/NC_00913 --phred33 --local $i > 3_mapping/${sample}.sam 2>> 3_mapping/bowtie2-align.log ; 
 done '
 ```
@@ -99,7 +99,7 @@ done '
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-#|mapped chr+spike     |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | 
+<--|mapped chr+spike     |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | -->
 |mapped chr  |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
 
 
@@ -126,7 +126,7 @@ done ; done ;
 
 ### Read coverage computation
 
-- Protocol: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 paire, exchange of reverse and forward strands (join).
+- Protocol: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 reads, exchange of reverse and forward strands (join).
 - Code:
 ```bash
 for i in 2_mapping/*_CCATGG.bam ; do
@@ -179,7 +179,7 @@ sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ |
 blast
 blast analysis
 ```
-- Result file: `tRNA_feature.txt` [supplemental file](http://??)
+- Result file: `tRNA_feature.txt` 
 
 ## Termination signal: from read coverage to ts-jump
 
