@@ -106,14 +106,13 @@ done '
 
 ### Alignment selection
 
-- Protocol: selection of mapped reads on the genomic sequence (with samtools view) and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
+- Protocol: selection of mapped reads on the genomic sequence and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
 - Code:
 ```bash
 rm selection.log
 for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
-   samtools view -h 3_mapping/${rep}${s}.sam NC_000913.3 | awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hb -o 4_selection/${rep}${s}_CCATGG_unsort.bam - 2>> 4_selection/selection.log ; 
-   samtools sort 4_selection/${rep}${s}_CCATGG_unsort.bam > 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log
-   samtools index 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ; 
+   awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hu - | samtools sort - > 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ; 
+   samtools index 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ;
 done ; done ;
 ```
 - Result files (into `3_mapping` repository): 
