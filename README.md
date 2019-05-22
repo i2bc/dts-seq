@@ -62,7 +62,7 @@ for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${sam
 DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root" ;
 rm 2_processedData/cutadapt.log ; rm 2_processedData/fastqc.log ;
 for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
-   SampleName=`basename -s .fastq.gz ${i}` ; 
+   SampleName=`basename -s _R2.fastq.gz ${i}` ; 
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=2_processedData/${SampleName}_noPolyA.fastq ${i} >> 2_processedData/cutadapt.log 2>&1 ;
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o 2_processedData/FastQC 2_processedData/${SampleName}_noPolyA.fastq >> 2_processedData/fastqc.log 2>&1 ;
 done'
@@ -88,7 +88,7 @@ rm 3_mapping/bowtie2-build.log ; rm 3_mapping/bowtie2-align.log ;
 docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna 3_mapping/index_bt2x/NC_00913 >> 3_mapping/bowtie2-build.log 2>&1
 # bowtie2 run
 for i in 2_processedData/*_noPolyA.fastq ; do 
-   sample=`basename $i _R2_noPolyA.fastq` ; 
+   sample=`basename $i _noPolyA.fastq` ; 
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x 3_mapping/index_bt2x/NC_00913 --phred33 --local $i > 3_mapping/${sample}.sam 2>> 3_mapping/bowtie2-align.log ; 
 done '
 ```
@@ -100,7 +100,7 @@ done '
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
 <--|mapped chr+spike     |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | -->
-|mapped chr  |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
+|mapped |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
 
 
 
@@ -109,9 +109,9 @@ done '
 - Protocol: selection of mapped reads on the genomic sequence and presenting a complete 3' end, ie. either CCA or TGG depending on the DNA strand (awk). The resulting alignment files were sorted by increasing locations and the associated index files for binary management were created.
 - Code:
 ```bash
-rm selection.log
+rm 4_selection/selection.log
 for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
-   awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' | samtools view -hu - | samtools sort - > 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ; 
+   awk 'BEGIN{FS="\t";OFS="\t"}{if( ($0~/@/)||((($2==16)&&($10~/CCA$/))||(($2==0)&&($10~/^TGG/))) ){print $0}}' 3_mapping/${rep}${s}.sam | samtools view -hu - | samtools sort - > 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ; 
    samtools index 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ;
 done ; done ;
 ```
@@ -128,17 +128,17 @@ done ; done ;
 - Protocol: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 reads, exchange of reverse and forward strands (join).
 - Code:
 ```bash
-for i in 2_mapping/*_CCATGG.bam ; do
-   sample=`basename $i .bam` ;
-   # coverage for reverse strand
-   samtools view -h -b -f 16 ${sample}.bam NC_000913.3 | samtools depth -d 10000000 -a - > ${sample}_depth_rev.txt ; 
+for i in 4_selection/*_CCATGG.bam ; do 
+   sample=`basename $i .bam` ; 
+   # coverage of reverse strand
+   samtools view -h -b -f 16 ${i} NC_000913.3 | samtools depth -d 10000000 -a - > 5_coverage/${sample}_depth_rev.txt ; 
    # coverage for forward strand
-   samtools view -h -b -F 0x14 ${sample}.bam NC_000913.3 | samtools depth -d 10000000 -a - > ${sample}_depth_for.txt ; 
+   samtools view -h -b -F 0x14 ${i} NC_000913.3 | samtools depth -d 10000000 -a - > 5_coverage/${sample}_depth_for.txt ; 
    # strands association 
-   join -t $'\t' -12 -22 -o 1.3,2.3 ${sample}_depth_rev.txt ${sample}_depth_for.txt > ${sample}_depth_fr.txt ; 
-done ;
+   join -t $'\t' -12 -22 -o 1.3,2.3 5_coverage/${sample}_depth_rev.txt 5_coverage/${sample}_depth_for.txt > 5_coverage/${sample}_depth_fr.txt ;
+done 
 ```
-- Result files:
+- Result files (into `5_coverage` repository):
   - 9 *_depth_for.txt (coverage on forward strand)
   - 9 *_depth_rev.txt (coverage on reverse strand)
   - 9 *_depth_fr.txt (coverage on both strands)
