@@ -17,10 +17,16 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 * Protocol: creating a repository for the analysis: 
 * Code:
 ```bash
+# download or clone codes & data
+git clone https://github.com/i2bc/dts-seq.git
+# create the Dts-seq repositories & links with the codes
 mkdir Dts-seq ; 
 cd Dts-seq ; 
-mkdir 1_rawData 2_processedData 3_mapping 4_selection 5_coverage 6_tRNA_modification
+mkdir 1_rawData 2_processedData 3_mapping 4_selection 5_coverage 6_tRNA_modification 7_termination_signal
 mkdir 2_processedData/FastQC 3_mapping/index_bt2x
+ln -s ../dts-seq/NC_000913_tRNA.tsv 6_tRNA_modification/.
+ln -s ../dts-seq/bmModomics_with_tmRNA.fasta 6_tRNA_modification/.
+ln -s ../dts-seq/trnaprint.txt 7_termination_signal/.
 ```
 * Result: the architecture of `Dts-seq` repository
 
@@ -28,16 +34,16 @@ mkdir 2_processedData/FastQC 3_mapping/index_bt2x
 
 #### Genome & annotations 
 
-* Protocol: Genome downloaded from ncbi, accession: GCF_000005845.2_ASM584v2
+* Protocol: download genome from ncbi, accession: GCF_000005845.2_ASM584v2
 * Code : 
 ```bash
-cd 1_raw_data
+cd 1_rawData
 wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz
 wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.gff.gz
 gunzip GCF_000005845.2_ASM584v2_genomic.*.gz
 cd ..
 ```
-* Result files: 
+* Result files (into `Dts-seq/1_rawData` repository): 
   * GCF_000005845.2_ASM584v2_genomic.fna
   * GCF_000005845.2_ASM584v2_genomic.gff
 
@@ -92,7 +98,7 @@ for i in 2_processedData/*_noPolyA.fastq ; do
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x 3_mapping/index_bt2x/NC_00913 --phred33 --local $i > 3_mapping/${sample}.sam 2>> 3_mapping/bowtie2-align.log ; 
 done '
 ```
-- Result files (into `2_mapping` repository):
+- Result files (into `3_mapping` repository):
   - 6 index files for bowtie2 (`*.btz2` into `index_bt2x` repository)
   - 9 *.sam
   - log files: `bowtie2-align.log`, `bowtie2-build.log`
@@ -115,7 +121,7 @@ for rep in A B C ; do for s in "3-D" "4-N"T "5-nD" ; do
    samtools index 4_selection/${rep}${s}_CCATGG.bam 2>> 4_selection/selection.log ;
 done ; done ;
 ```
-- Result files (into `3_mapping` repository): 
+- Result files (into `4_selection` repository): 
   - 9 *_CCATGG.bam 
   - 9 *_CCATGG.bam.bai 
 
@@ -159,28 +165,40 @@ done ; done
 
 ### Data
 
-- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Escherichia coli* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file. Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC), and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics_nov17.txt`: i) without any bases but modified ones (`bmModomics_nov17_noBM.fasta`) and ii) without modified bases (`bmModomics_nov17_seqU.fasta`).
+- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Escherichia coli* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file (downloaded on november 2017). Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC, and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 2 fasta files from `bmModomics.txt`: i) without modified bases (`bmModomics_seqU.fasta`), and ii) without any bases but modified ones (`bmModomics_noBM.fasta`).
 - Code:
 ```bash
-sed 'n;s/[AGCU_]/ /g' bmModomics_nov17_info.fasta > bmModomics_nov17_noBM.fasta
-sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ | /_/g;' bmModomics_nov17.txt > bmModomics_nov17_seqU.fasta
+sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ | /_/g;' bmModomics.txt > bmModomics_seqU.fasta
+sed 'n;s/[AGCU_]/ /g' bmModomics_seqU.fasta > bmModomics_noBM.fasta
+sed 'n;y!=/){}$*#%+⊄467BDEIJKMPQSTVX!AAUUCUAGCANUAGCUANUGCUNUUUU!;' bmModomics_seqU.fasta | sed 's/-//g;s/U/T/g;s/⊄/0/g' > tRNA_coli.fasta
 ```
-- Result files: 
-  - 43 tRNA sequences with ?? knowed modified bases, `bmModomics_nov17.txt`
-  - without any bases but modified ones (`bmModomics_nov17_noBM.fasta`)
-  - without modified bases (`bmModomics_nov17_seqU.fasta`)
+- Result files (in `6_tRNA_modification` repository): 
+  - downloaded file with 43 tRNA sequences including knowed modified bases, `bmModomics.txt`
+  - without any bases but modified ones (`bmModomics_noBM.fasta`)
+  - without modified bases (`bmModomics_seqU.fasta`)
 
 ### Genomic coordinates of modified bases
 
-- Protocol: alignment of modomics sequences to genomic sequence (blastn)
+- Protocol: alignment (blastn software) of the modomics tRNA sequences to the genomic sequence. Manual analysis of the blastn report in order to associate the genomic locations to the 43 tRNA of modomics and to create the tRNA groups for those that have the same genomic sequence. The resulting file contains 89 tRNA (including pseudo-tRNAs and the ssrA-tmRNA).
 - Code:
 ```bash
-blast
-blast analysis
+# create blastDB:
+ncbi-blast-2.6.0+/bin/makeblastdb -in tRNA_coli.fasta -out tRNA_coli -parse_seqids -dbtype nucl
+# run blastn:
+ncbi-blast-2.6.0+/bin/blastn -out blastn_table -query ../1_rawData/GCF_000005845.2_ASM584v2_genomic.fna -db tRNA_coli -outfmt 7
 ```
-- Result file: `tRNA_feature.txt` 
+- Result files (in `6_tRNA_modification` repository): 
+  - the blastDB files (6 tRNA_coli.n* files) 
+  - the blastn report (`blastn_table`)
+  - `tRNA_features.txt` 
 
 ## Termination signal: from read coverage to ts-jump
+
+- Protocol: with information from the tRNA_features.txt file and the read coverage computation for each sample, compute and plot the "ts-signal".
+- Code (launch R into the `Dts-seq` repository):
+```R
+source("../dts-seq-plot.r")
+```
 
 ## Software version used
 
@@ -188,4 +206,5 @@ blast analysis
 - cutadapt: from docker-registry.genouest.org/bioconda/cutadapt, version 1.11
 - bowtie2: from docker-registry.genouest.org/bioconda/bowtie2, bowtie2-align-s version 2.2.8 
 - samtools: version 1.4
-
+- blast: from the ncbi-blast-2.6.0+ version
+- R: version 3.4.4

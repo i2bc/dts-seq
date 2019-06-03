@@ -7,33 +7,33 @@ library (Biostrings)
 # ---------- INPUT FILES ---------------
 
 datadir="./"
-covdir="2_mapping_4/"
+covdir="5_coverage/"
 
 # tRNA coordinates and names
-trnacoordF<-paste0(datadir,"NC_000913_tRNA.tsv")
+trnacoordF<-paste0(datadir,"6_tRNA_modification/NC_000913_tRNA.tsv")
 # coli fasta sequence imported from: 
 #   ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM584v2/GCF_000005845.2_ASM584v2_genomic.fna.gz
 #   (unzipped)
-genomeF<-paste0(datadir, "GCF_000005845.2_ASM584v2_genomic.fna")
+genomeF<-paste0(datadir, "1_rawData/GCF_000005845.2_ASM584v2_genomic.fna")
 # Modomics modified bases (Fasta-like but shows only mod bases)
-modomicsF<-paste0(datadir, "bmModomics_with_tmRNA.fasta")
+modomicsF<-paste0(datadir, "6_tRNA_modification/bmModomics_with_tmRNA.fasta")
 # list of tRNAs for printing and names of "lead" tRNAs
-trnaF=paste0(datadir,"trnaprint.txt")
+trnaF=paste0(datadir,"7_termination_signal/trnaprint.txt")
 
 # Genome mapping coverage files (BigWig-like but w/ 2 strands)
 #   A 2-column file with one line per genome position
 #   column 1: coverage for + strand
 #   column 2: coverage for minus strand
 covF=c(
-  "A4-NT_CCATGG_m4_depth_fr.txt",
-  "A3-D_CCATGG_m4_depth_fr.txt",
-  "A5-nD_CCATGG_m4_depth_fr.txt",
-  "B4-NT_CCATGG_m4_depth_fr.txt", 
-  "B3-D_CCATGG_m4_depth_fr.txt",
-  "B5-nD_CCATGG_m4_depth_fr.txt",
-  "C4-NT_CCATGG_m4_depth_fr.txt",
-  "C3-D_CCATGG_m4_depth_fr.txt",
-  "C5-nD_CCATGG_m4_depth_fr.txt"
+  "A4-NT_CCATGG_depth_fr.txt",
+  "A3-D_CCATGG_depth_fr.txt",
+  "A5-nD_CCATGG_depth_fr.txt",
+  "B4-NT_CCATGG_depth_fr.txt", 
+  "B3-D_CCATGG_depth_fr.txt",
+  "B5-nD_CCATGG_depth_fr.txt",
+  "C4-NT_CCATGG_depth_fr.txt",
+  "C3-D_CCATGG_depth_fr.txt",
+  "C5-nD_CCATGG_depth_fr.txt"
 )
 
 # Color plalette and other graphical parameters
