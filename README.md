@@ -20,15 +20,14 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 # download or clone codes & data
 git clone https://github.com/i2bc/dts-seq.git
 # create the Dts-seq repositories & links with the codes
-mkdir Dts-seq ; 
-cd Dts-seq ; 
+cd dts-seq ; 
 mkdir 1_rawData 2_processedData 3_mapping 4_selection 5_coverage 6_tRNA_modification 7_termination_signal
 mkdir 2_processedData/FastQC 3_mapping/index_bt2x
-ln -s ../dts-seq/NC_000913_tRNA.tsv 6_tRNA_modification/.
-ln -s ../dts-seq/bmModomics_with_tmRNA.fasta 6_tRNA_modification/.
-ln -s ../dts-seq/trnaprint.txt 7_termination_signal/.
+mv NC_000913_tRNA.tsv 6_tRNA_modification/.
+mv bmModomics_with_tmRNA.fasta 6_tRNA_modification/.
+mv trnaprint.txt 7_termination_signal/.
 ```
-* Result: the architecture of `Dts-seq` repository
+* Result: the architecture of `dts-seq` repository
 
 ### Data
 
@@ -43,13 +42,13 @@ wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/005/845/GCF_000005845.2_ASM5
 gunzip GCF_000005845.2_ASM584v2_genomic.*.gz
 cd ..
 ```
-* Result files (into `Dts-seq/1_rawData` repository): 
+* Result files (into `dts-seq/1_rawData` repository): 
   * GCF_000005845.2_ASM584v2_genomic.fna
   * GCF_000005845.2_ASM584v2_genomic.gff
 
 #### RNAseq Data 
 
-- Protocol: R2 files were downloaded from ENA (access: ??) into the local `Dts-seq/1_rawData` repository.
+- Protocol: R2 files were downloaded from ENA (access: ??) into the local `dts-seq/1_rawData` repository.
 - Code to list all samples files:
 ```bash
 for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${samples}_R2.fastq.gz ; done ; done
@@ -65,7 +64,7 @@ for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${sam
 - Protocol: each raw fastq file was cleaned (cutadapt) with a specific polyA adapter following the wet protocol and reads shorter than 10 bp after polyA trimming were discarded. Quality control was performed (FastQC software). 
 - Code:
 ```bash
-DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root" ;
+DTSSEQDIR="/path/to/dts-seq/repository/from/the/root" ;
 rm 2_processedData/cutadapt.log ; rm 2_processedData/fastqc.log ;
 for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
    SampleName=`basename -s _R2.fastq.gz ${i}` ; 
@@ -88,7 +87,7 @@ cd ..
 - Protocol: Reads mapping was done with bowtie2 with the local mapping option to maximise the alignment length.
 - Code:
 ```bash
-DTSSEQDIR="/path/to/Dts-seq/repository/from/the/root"
+DTSSEQDIR="/path/to/dts-seq/repository/from/the/root"
 # create genome index file for bowtie2
 rm 3_mapping/bowtie2-build.log ; rm 3_mapping/bowtie2-align.log ;
 docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna 3_mapping/index_bt2x/NC_00913 >> 3_mapping/bowtie2-build.log 2>&1
@@ -195,9 +194,9 @@ ncbi-blast-2.6.0+/bin/blastn -out blastn_table -query ../1_rawData/GCF_000005845
 ## Termination signal: from read coverage to ts-jump
 
 - Protocol: with information from the tRNA_features.txt file and the read coverage computation for each sample, compute and plot the "ts-signal".
-- Code (launch R into the `Dts-seq` repository):
+- Code (launch R into the `dts-seq` repository):
 ```R
-source("../dts-seq-plot.r")
+source("dts-seq-plot.r")
 ```
 
 ## Software version used
