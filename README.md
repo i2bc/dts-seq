@@ -177,7 +177,7 @@ done
 
 ### Data
 
-- Protocol: Get sequences with modified bases from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Escherichia coli* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file (downloaded on november 2017, `bmModomics.txt`). Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC, and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 3 fasta files from `bmModomics.txt`: i) without modified bases (`bmModomics_seqU.fasta`), ii) without any bases but modified ones (`bmModomics_noBM.fasta`), and iii) 43 tRNA DNA sequences without any modified base (`tRNA_coli.fasta`).
+- Protocol: sequences with modified bases were get from [modomics DB](http://modomics.genesilico.pl/sequences/list/tRNA/) for the *Escherichia coli* specie, acces: clic on "Display as ASCII" buton and copy/paste in text format file (downloaded on november 2017, `bmModomics.txt`). Manually apply 2 modifications: i) deduplicate 4 tRNA names for Ini_CAU, Thr_GGU, Tyr_QUA, Val_GAC, and ii) duplicate the "_" character of selC following the footnote of the Modomics page. Create 3 fasta files from `bmModomics.txt`: i) without modified bases (`bmModomics_seqU.fasta`), ii) without any bases but modified ones (`bmModomics_noBM.fasta`), and iii) 43 tRNA DNA sequences without any modified base (`tRNA_coli.fasta`).
 - Code:
 ```bash
 sed 's/-//g;s/> tRNA/>tRNA/g;s/ | Escherichia coli | prokaryotic cytosol//g;s/ | /_/g;' 6_tRNA_modification/bmModomics.txt > 6_tRNA_modification/bmModomics_seqU.fasta
@@ -198,12 +198,13 @@ sed 'n;y!=/){}$*#%+⊄467BDEIJKMPQSTVX!AAUUCUAGCANUAGCUANUGCUNUUUU!;' 6_tRNA_mod
 rm 6_tRNA_modification/blastDB-build.log ; rm 6_tRNA_modification/blastn-run.log
 # create blastDB:
 docker run -v ${DTSSEQDIR}:/in:rw -w /in chrishah/ncbi-blast:v2.6.0 makeblastdb -in 6_tRNA_modification/tRNA_coli.fasta -out 6_tRNA_modification/tRNA_BD -parse_seqids -dbtype nucl >> 6_tRNA_modification/blastDB-build.log 2>&1
+# run blastn:
 docker run -v ${DTSSEQDIR}:/in:rw -w /in chrishah/ncbi-blast:v2.6.0 blastn -out 6_tRNA_modification/blastn_table -query 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna -db 6_tRNA_modification/tRNA_DB -outfmt 7 >> 6_tRNA_modification/blastn-run.log 2>&1
 ```
 - Result files (in `6_tRNA_modification` repository): 
-  - the blastDB files (6 tRNA_coli.n* files) 
+  - the blastDB files (6 tRNA_DB.n* files) 
   - the blastn report (`blastn_table`)
-  - `tRNA_features.txt` 
+  - `tRNA_features.txt` (manually designed from the blastn report)
 
 ## Termination signal: from read coverage to ts-jump
 
