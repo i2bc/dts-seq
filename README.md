@@ -22,7 +22,7 @@ If you haven't yet docker, you may follow the installation page ([docker]https:/
 * Protocol: creating a repository for the analysis: 
 * Code:
 ```bash
-# download or clone codes & data
+# download and decompress, or clone codes & data
 git clone https://github.com/i2bc/dts-seq.git
 # create the Dts-seq repositories & links with the codes
 cd dts-seq ; 
@@ -112,7 +112,6 @@ done'
 - Protocol: reads mapping was done with bowtie2 with the local mapping option to maximise the alignment length.
 - Code:
 ```bash
-DTSSEQDIR="/path/to/dts-seq/repository/from/the/root"
 # create genome index file for bowtie2
 rm 3_mapping/bowtie2-build.log ; rm 3_mapping/bowtie2-align.log ;
 docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2-build 1_rawData/GCF_000005845.2_ASM584v2_genomic.fna 3_mapping/index_bt2x/NC_00913 >> 3_mapping/bowtie2-build.log 2>&1
@@ -129,8 +128,7 @@ done '
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-<--|mapped chr+spike     |  7209763,  5765983,  7528570 |  7829777,  7574852,  8282069 |  9771220,  8149220,  7276564 | -->
-|mapped |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
+|mapped      |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
 
 
 
