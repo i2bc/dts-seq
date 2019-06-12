@@ -13,7 +13,7 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 ## Note about installing the third-party tools
 
 In order to increase the reproducibility of the computational analyses, we used the docker solution.
-If you haven't yet docker, you may follow the installation page (docker) or install the third-party tools listed at the end of this document.
+If you haven't yet docker, you may follow the installation page ([docker]https://docs.docker.com/install/) or install the third-party tools listed at the end of this document.
 
 ## RNAseq: from fastq to read coverage
 
@@ -26,6 +26,7 @@ If you haven't yet docker, you may follow the installation page (docker) or inst
 git clone https://github.com/i2bc/dts-seq.git
 # create the Dts-seq repositories & links with the codes
 cd dts-seq ; 
+DTSSEQDIR=$(pwd) ;
 mkdir 1_rawData 2_processedData 3_mapping 4_selection 5_coverage 6_tRNA_modification 7_termination_signal
 mkdir 2_processedData/FastQC 3_mapping/index_bt2x
 mv NC_000913_tRNA.tsv 6_tRNA_modification/.
@@ -44,6 +45,7 @@ mv trnaprint.txt 7_termination_signal/.
 ├── 4_selection
 ├── 5_coverage
 ├── 6_tRNA_modification
+│   ├── bmModomics.txt
 │   ├── bmModomics_with_tmRNA.fasta
 │   └── NC_000913_tRNA.tsv
 ├── 7_termination_signal
@@ -89,7 +91,6 @@ for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${sam
 - Protocol: each raw fastq file was cleaned (cutadapt) with a specific polyA adapter following the wet protocol and reads shorter than 10 bp after polyA trimming were discarded. Quality control was performed (FastQC software). 
 - Code:
 ```bash
-DTSSEQDIR="/path/to/dts-seq/repository/from/the/root" ;
 rm 2_processedData/cutadapt.log ; rm 2_processedData/fastqc.log ;
 for i in `ls 1_rawData/*_R2.fastq.gz` ; do 
    SampleName=`basename -s _R2.fastq.gz ${i}` ; 
@@ -214,7 +215,7 @@ docker run -v ${DTSSEQDIR}:/in:rw -w /in chrishah/ncbi-blast:v2.6.0 blastn -out 
 source("dts-seq-plot.r")
 ```
 
-## Software version used
+## Softwares version used
 
 - docker version 18.09.2, build 6247962
 - fastqc: from docker-registry.genouest.org/ifb/fastqc, version 0.11.5
