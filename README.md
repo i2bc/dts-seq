@@ -4,7 +4,7 @@
 
 You will find here the computational protocol for the analysis of Dts-seq data.
 
-**Contact**
+**Contacts**
 
 - Claire Toffano-Nioche (<claire.toffano-nioche@u-psud.fr>)
 - Daniel Gautheret (<daniel.gautheret@u-psud.fr>)
@@ -12,7 +12,7 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 
 ## Note about installing the third-party tools
 
-In order to increase the reproducibility of the computational analyses, we used the docker solution.
+In order to increase the reproducibility of the computational analyses, we used the docker solution as much as possible.
 If you haven't yet docker, you may follow the installation page ([docker]https://docs.docker.com/install/) or install the third-party tools listed at the end of this document.
 
 ## RNAseq: from fastq to read coverage
@@ -75,10 +75,16 @@ cd ..
 
 #### RNAseq Data 
 
-- Protocol: R2 files were downloaded from ENA (access: ??) into the local `dts-seq/1_rawData` repository.
+- Protocol: R2 files were downloaded from ENA (access: PRJEB33277) into the local `dts-seq/1_rawData` repository.
 - Code to list all samples files:
 ```bash
-for rep in A B C ; do for samples in 3-D 4-NT 5-nD ; do ls 1_rawData/${rep}${samples}_R2.fastq.gz ; done ; done
+cd 1_rawData ;
+for rep in A B C ; do 
+    for samples in 3-D 4-NT 5-nD ; do 
+        wget ${rep}${samples}_R2.fastq.gz ; 
+    done ; 
+done ;
+cd ..
 ```
 - Result files: 9 `*_R2_fastq.gz`
 
