@@ -102,7 +102,7 @@ for i in `ls 1_rawData/*_R2.fastq.gz` ; do
    SampleName=`basename -s _R2.fastq.gz ${i}` ; 
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/cutadapt cutadapt --adapter=AAAAAAAAAAAAAAA --minimum-length=10 --output=2_processedData/${SampleName}_noPolyA.fastq ${i} >> 2_processedData/cutadapt.log 2>&1 ;
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/ifb/fastqc fastqc -o 2_processedData/FastQC 2_processedData/${SampleName}_noPolyA.fastq >> 2_processedData/FastQC/fastqc.log 2>&1 ;
-done'
+done
 ```
 - Result files (into `2_processedData` repository):
   - 9 output fastq files (`*_noPolyA.fastq`) 
@@ -125,7 +125,7 @@ docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/biocon
 for i in 2_processedData/*_noPolyA.fastq ; do 
    sample=`basename $i _noPolyA.fastq` ; 
    docker run -v ${DTSSEQDIR}:/data:rw -w /data docker-registry.genouest.org/bioconda/bowtie2 bowtie2 -x 3_mapping/index_bt2x/NC_00913 --phred33 --local $i > 3_mapping/${sample}.sam 2>> 3_mapping/bowtie2-align.log ; 
-done '
+done
 ```
 - Result files (into `3_mapping` repository):
   - 6 index files for bowtie2 (`*.btz2` into `index_bt2x` repository)
