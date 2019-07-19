@@ -115,7 +115,7 @@ done
 
 ### Mapping step
 
-- Protocol: reads mapping was done with bowtie2 with the local mapping option to maximise the alignment length.
+- Protocol: reads mapping was done by bowtie2 with the local mapping option up to maximize the alignment length.
 - Code:
 ```bash
 # create genome index file for bowtie2
@@ -134,7 +134,8 @@ done
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       |
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-|mapped      |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  |
+<!-- |mapped      |   7091514, 5644988, 7434767  |   7760868, 7436857, 8097497  |   9705213, 8024150, 7164553  | -->
+|mapped      |   7102322, 5656027, 7442976  |   7767199, 7449606, 8113918  |   9712034, 8033555, 7173882  |
 
 
 
@@ -155,8 +156,9 @@ done ; done ;
 
 |read number |     A5-nD, B5-nD, C5-nD      |       A4-NT, B4-NT, C4-NT    |       A3-D, B3-D, C3-D       | 
 |------------|:----------------------------:|:----------------------------:|:----------------------------:|
-|remaining   |  6494515,  5150196,  6941871 |  7229758,  6803833,  7551225 |  9045057,  7457325,  6771946 | 
-
+<!-- |remaining   |  6494515,  5150196,  6941871 |  7229758,  6803833,  7551225 |  9045057,  7457325,  6771946 | -->
+|remaining   |  6505322,  5161234,  6950080 |  7236088,  6816582,  7567646 |  9051878,  7466730,  6781275 | 
+                                                                              
 ### Read coverage computation
 
 - Protocol: creation of coverage files (both format wig and 2 columns) with strand separation. As alignments came from R2 reads, exchange of reverse and forward strands (join).
