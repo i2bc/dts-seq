@@ -6,7 +6,7 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 
 Citation:
 Accurate characterization of Escherichia coli tRNA modifications with a simple method of deep sequencing library preparation.
-Wang J, Toffano-Nioche C, Lorieux F, Gautheret D, Lehmann J. RNA Biol. 2020 Jul 3. doi: 10.1080/15476286.2020.1790871. PMID: 32618488 
+Wang J, Toffano-Nioche C, Lorieux F, Gautheret D, Lehmann J. RNA Biol. 2020 Jul 3. doi: 10.1080/15476286.2020.1790871. PMID: [32618488](https://pubmed.ncbi.nlm.nih.gov/32618488/) 
 
 **Contacts**
 
@@ -17,7 +17,7 @@ Wang J, Toffano-Nioche C, Lorieux F, Gautheret D, Lehmann J. RNA Biol. 2020 Jul 
 ## Note about installing the third-party tools
 
 In order to increase the reproducibility of the computational analyses, we used the docker solution as much as possible.
-If you haven't yet docker, you may follow the installation page ([docker]https://docs.docker.com/install/) or install the third-party tools listed at the end of this document.
+If you haven't yet docker, you may follow the installation page ([docker](https://docs.docker.com/install/)) or install the third-party tools listed at the end of this document.
 
 ## RNAseq: from fastq to read coverage
 
