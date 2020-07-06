@@ -79,7 +79,7 @@ cd ..
 
 #### RNAseq Data 
 
-- Protocol: R2 files were downloaded from ENA (access: PRJEB33277) into the local `dts-seq/1_rawData` repository.
+- Protocol: R2 files were downloaded from ENA (access: [PRJEB33277](https://www.ebi.ac.uk/ena/data/view/PRJEB33277)) into the local `dts-seq/1_rawData` repository.
 - Code to list all samples files:
 ```bash
 cd 1_rawData ;
