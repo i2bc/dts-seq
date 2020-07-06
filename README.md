@@ -6,7 +6,7 @@ You will find here the computational protocol for the analysis of Dts-seq data.
 
 Citation:
 Accurate characterization of Escherichia coli tRNA modifications with a simple method of deep sequencing library preparation.
-Wang J, Toffano-Nioche C, Lorieux F, Gautheret D, Lehmann J. RNA Biol. 2020 Jul 3. [doi: 10.1080/15476286.2020.1790871](https://doi.org/10.1080/15476286.2020.1790871). PMID: [32618488](https://pubmed.ncbi.nlm.nih.gov/32618488/) 
+Wang J, Toffano-Nioche C, Lorieux F, Gautheret D, Lehmann J. RNA Biol. 2020 Jul 3. doi: [10.1080/15476286.2020.1790871](https://doi.org/10.1080/15476286.2020.1790871). PMID: [32618488](https://pubmed.ncbi.nlm.nih.gov/32618488/) 
 
 **Contacts**
 
