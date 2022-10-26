@@ -1,8 +1,6 @@
 # Dts-seq
 
-**Computational workflow for Dts-seq analysis**
-
-You will find here the computational protocol for the analysis of Dts-seq data.
+**Computational workflow for Direct tRNA sequencing (Dts-seq) analysis**
 
 Citation:
 Accurate characterization of Escherichia coli tRNA modifications with a simple method of deep sequencing library preparation.
